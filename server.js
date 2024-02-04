@@ -1,49 +1,78 @@
-import express from "express";
-import fetch from "node-fetch";
-let app = (global.app = express());
+/* Owner: Alicia zyn */
+/* Asisten: Yui Hoshikawa */
+/* Instagram: @_aliviazyn */
+/* Github: AiciaxyviorMd */
+/* Buy Sc Update: +6288-68142831 */
+/* Source Code: https://github.com/AiciaxyviorMd/Mantan-md */
 
-function connect(PORT) {
-	app.get("/", (req, res) => res.send("Hello World!"));
+import axios from "axios";
+import os from "os";
 
-	app.get("/nowa", async (req, res) => {
-		let q = req.query.number,
-			regex = /x/g;
-		if (!q) return res.send("Input Parameter Number Parameter");
-		if (!q.match(regex))
-			return res.send('Parameter Number Must Fill With One Letter "x"');
-		let random = q.match(regex).length,
-			total = Math.pow(10, random),
-			array = [];
-		for (let i = 0; i < total; i++) {
-			let list = [...i.toString().padStart(random, "0")];
-			let result = q.replace(regex, () => list.shift()) + "@s.whatsapp.net";
-			if (await conn.onWhatsApp(result).then((v) => (v[0] || {}).exists)) {
-				let info = await conn.fetchStatus(result).catch((_) => {});
-				array.push({ jid: result, exists: true, ...info });
-			} else {
-				array.push({ jid: result, exists: false });
-			}
-		}
-		res.json({ result: array });
-	});
+let handler = async (m) => {
+	try {
+		const response = await axios.get("http://ip-api.com/json/");
+		const serverInfo = response.data;
 
-	app.listen(PORT, () => {
-		keepAlive();
-		console.log("App listened on port", PORT);
-	});
+		conn.sendMessage(m.chat, {
+			react: {
+				text: "🕒",
+				key: m.key,
+			},
+		});
+
+		let serverMessage = `•  S E R V E R\n\n`;
+
+		const osInfo = os.platform();
+
+		const totalRAM = Math.floor(os.totalmem() / (1024 * 1024));
+		const freeRAM = Math.floor(os.freemem() / (1024 * 1024));
+
+		const uptime = os.uptime();
+		const uptimeFormatted = formatUptime(uptime);
+
+		const processor = os.cpus()[0].model;
+
+		serverMessage += `┌  ◦  OS : ${osInfo}\n`;
+		serverMessage += `│  ◦  Ram : ${freeRAM} MB / ${totalRAM} MB\n`;
+		serverMessage += `│  ◦  Country : ${serverInfo.country}\n`;
+		serverMessage += `│  ◦  CountryCode : ${serverInfo.countryCode}\n`;
+		serverMessage += `│  ◦  Region : ${serverInfo.region}\n`;
+		serverMessage += `│  ◦  RegionName : ${serverInfo.regionName}\n`;
+		serverMessage += `│  ◦  City : ${serverInfo.city}\n`;
+		serverMessage += `│  ◦  Zip : ${serverInfo.zip}\n`;
+		serverMessage += `│  ◦  Lat : ${serverInfo.lat}\n`;
+		serverMessage += `│  ◦  Lon : ${serverInfo.lon}\n`;
+		serverMessage += `│  ◦  Timezone : ${serverInfo.timezone}\n`;
+		serverMessage += `│  ◦  Isp : ${serverInfo.isp}\n`;
+		serverMessage += `│  ◦  Org : ${serverInfo.org}\n`;
+		serverMessage += `│  ◦  As : ${serverInfo.as}\n`;
+		serverMessage += `│  ◦  Query : HIDDEN\n`;
+		serverMessage += `│  ◦  Uptime : ${uptimeFormatted}\n`;
+		serverMessage += `└  ◦  Processor : ${processor}`;
+
+		await m.reply(serverMessage);
+	} catch (e) {
+		console.log(e);
+	}
+};
+
+function formatUptime(uptime) {
+	let seconds = Math.floor(uptime % 60);
+	let minutes = Math.floor((uptime / 60) % 60);
+	let hours = Math.floor((uptime / (60 * 60)) % 24);
+	let days = Math.floor(uptime / (60 * 60 * 24));
+
+	let formattedUptime = "";
+	if (days > 0) formattedUptime += `${days} days `;
+	if (hours > 0) formattedUptime += `${hours} hours `;
+	if (minutes > 0) formattedUptime += `${minutes} minutes `;
+	if (seconds > 0) formattedUptime += `${seconds} seconds`;
+
+	return formattedUptime;
 }
 
-function keepAlive() {
-	let url = `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
-	if (/(\/\/|\.)undefined\./.test(url)) return;
-	setInterval(() => {
-		fetch(url).catch(console.log);
-	}, 30 * 1000);
-}
+handler.command = ["server"];
+handler.tags = [tsearch];
+handler.help = ["server"];
 
-function formatDate(n, locale = "id") {
-	let d = new Date(n);
-	return d.toLocaleDateString(locale, { timeZone: "Asia/Jakarta" });
-}
-
-export default connect;
+export default handler;
